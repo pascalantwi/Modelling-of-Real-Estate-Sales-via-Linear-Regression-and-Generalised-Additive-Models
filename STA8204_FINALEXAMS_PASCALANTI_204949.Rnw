@@ -1,0 +1,1587 @@
+\documentclass[a4paper]{report}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{float}
+%
+\usepackage[margin=1in]{geometry}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{tcolorbox}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{algorithm2e}
+%
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{caption}
+
+\begin{document}
+\title{\textbf{Comparative Modelling of Real Estate Sales via Linear Regression and Generalised Additive Models: An Empirical Analysis and Predictive Performance Evaluation}}
+\author{\textbf{PASCAL ANTWI - 204949}}
+\date{\textbf{APRIL 2025}}
+\maketitle
+\tableofcontents
+\newpage
+
+\subsubsection*{Summary}
+\addcontentsline{toc}{section}{Executive Summary}
+This empirical study evaluates the comparative predictive performance of linear regression and generalized additive models (GAMs) in residential real estate valuation using a dataset of 522 transactions. Diagnostic analyses revealed substantial violations of linear regression assumptions, including non-normality (Shapiro-Wilk $W=0.937$, $p<0.001$) and heteroscedasticity (Breusch-Pagan $\chi^2=147.25$, $p<0.001$). While logarithmic transformation (optimal $\lambda=-0.195$) improved model fit ($R^2=0.834$ vs. $0.829$ in linear form), residual diagnostics indicated persistent assumption violations. GAMs demonstrated superior predictive accuracy, particularly for capturing non-linear relationships, achieving lower root mean square error values ($\text{RMSE}=0.0194$ for square footage vs. $0.0206$ in log-linear models) and explaining $83.5\%$ of price variance. Cross-validation results confirmed GAMs' enhanced stability ($\text{SD}$ of $R^2=0.015$ vs. $0.052$ for linear models). The analysis identifies square footage ($\beta=101.8$, $p<0.001$) and construction quality ($\Delta\text{RMSE}=-0.001$) as the most influential predictors.These findings suggest GAMs should be prioritized for accurate valuation in contexts requiring predictive precision, while acknowledging linear models retain utility for their interpretability in exploratory analyses. 
+
+\vspace{0.5em} % Small space above the line
+\noindent\rule{\textwidth}{0.4pt} % The horizontal line
+\vspace{-0.8em} % Moves keywords up slightly toward the line
+\noindent\textbf{Keywords:} \textit {Hedonic, GAMs, Diagnostics, Prediction, Valuation, ML, Non-parametric, Cross Validation}
+\vspace{0.5em} % 
+\subsection{Introduction}
+Accurate real estate price prediction is vital for financial stability and market efficiency, impacting mortgage lending and investment. Research indicates that precise predictions mitigate financial losses and bolster social stability, as shown in studies on machine learning in real estate (Yang, 2025). This study aims to rigorously compare the predictive performance of linear regression and generalised additive models (GAMs) in modeling residential sales prices. 
+\subsubsection{Research Problem}
+
+Traditional valuation approaches, particularly hedonic price models based on linear regression, have been the cornerstone of real estate analysis (Rosen, 1974). However, these models operate under strict assumptions of linearity and may fail to capture the complex, non-linear relationships that often characterize real estate markets. This can lead to inaccurate predictions and potentially flawed decision-making. The increasing availability of data and computational power allows for exploring more flexible modelling techniques.
+\subsubsection{Main Objectives}
+To rigorously compare and evaluate the predictive performance of linear regression and generalized additive models (GAMs) in modelling residential real estate sales prices, utilizing cross-validation techniques.
+\subsubsection{Specific Objectives}
+\begin{enumerate}
+    \item To develop and rigorously assess a linear regression model for predicting housing prices, emphasizing diagnostics and validation.
+    \item To implement and critically evaluate a GAM to predict housing prices, assessing predictive accuracy and variable significance via cross-validation.
+    \item To compare the strengths and weaknesses of both modelling approaches and offer evidence-based recommendations for future real estate modelling efforts.
+\end{enumerate}
+\subsection{Literature Review}
+The quantitative analysis of real estate markets has historically relied upon hedonic pricing models, wherein Rosen's (1974) framework established property value estimation via linear regression of characteristic attributes. However, the multi-factorial nature of real estate markets introduces non-linear relationships that may limit the efficacy of linear models. Empirical studies, such as Selim (2009) and Brunauer et al. (2010), have demonstrated the superior predictive performance of non-parametric and semi-parametric methodologies in such contexts. Concurrently, the proliferation of Automated Valuation Models (AVMs), as reviewed by El Jaouhari et al. (2024), reflects the increasing adoption of statistical learning techniques for efficient property valuation. Methodologically, Khandani, Kim, and Lo (2010) emphasize the need for cross-validation and outside-sample testing for robust comparative evaluation of predictive models in real estate price forecasting.
+
+\subsubsection{Justification for Linear Regression and GAMs}
+Applying linear regression to real estate valuation provides an initial analytical framework, leveraging its inherent interpretability and established statistical properties. This approach facilitates the quantification of linear relationships between property attributes and sales prices, serving as a foundational baseline. However, the inherent constraints of linearity necessitate the exploration of alternative modelling strategies capable of capturing more complex data structures.
+Generalized additive models (GAMs) offer an extension to the linear regression paradigm by accommodating non-linear relationships between predictor variables and the response. 
+\subsection{Methodology}
+\subsubsection{Data Source}
+This study employs a dataset of 522 residential real estate transactions recorded in a mid-western urban area during 2002. The dataset comprises 13 variables: sales price, square footage, bedroom count, construction quality, air conditioning, highway adjacency, architectural style, Lot size, construction year and a unique identifier assigned to each transaction (Kutner et al., 2005).
+\subsubsection{Statistical Analysis}
+ To analyze the relationship between Sales and the property characteristics, both a linear regression model and a Generalized Additive Model were employed. The property characteristics included finished square footage, number of bedrooms, number of bathrooms, air conditioning, garage capacity, presence of a pool, year of construction, construction quality, architectural style, lot size, and adjacency to a highway. Model performance assessment and selection were conducted using k-fold cross-validation. All analyses were performed using the statistical software R.
+ \subsubsection{Model Specification}
+\subsubsection{Regression Model}
+Regression is a statistical technique used to model and analyze the relationship between a dependent variable and one or more independent variables. It helps in understanding how the typical value of the dependent variable changes when any one of the independent variables is varied while the others are held fixed (Montgomery et al., 2021). The general form of a regression model:
+\textbf{\[
+y = X\beta + \varepsilon
+\]
+} Where, 
+\begin{itemize}
+    \item \(y\) is the response variable Sales price, which is an \(n \times 1\).
+    \item \(X\) is an \(n \times p\) matrix corresponding to the predictor variables.
+ 
+    \item \(\beta\) is an \(n \times 1\) vector containing of the regression coefficients of the predictor variables.
+    \item \(\varepsilon\) is an \(n \times 1\) vector of the errors.
+\end{itemize}
+
+\textbf{Model Assumptions}
+\begin{enumerate}
+    \item Normality of residuals
+    \item Homoscedasticity
+    \item Independence of residuals
+    \item Linearity 
+\end{enumerate}
+\subsubsection{Model Diagnostics}
+Model diagnostics are crucial for assessing the validity of the linear regression model and ensuring that the assumptions underlying the model hold true. Several techniques and plots can be used to check whether the assumptions of linearity, independence, homoscedasticity, and normality are satisfied.
+\subsubsection{Residual Plot}
+Residual plots are used to check the assumption of linearity and homoscedasticity. 
+The residuals 'bounce randomly' around the 0 line, suggesting the relationship is linear, and the residuals roughly form a 'horizontal band' around the 0 line, suggesting that the variances of the error terms are equal (Pennsylvania State University, 2018).
+\subsubsection{Normal Q-Q Plots and Shapiro-Wilk test}
+A Q-Q plot is used to assess whether the residuals are normally distributed. If the residuals are normally distributed, the points in the Q-Q plot should lie along a straight line. Large deviations from the line indicate departures from normality, such as skewness or heavy tails, and a $p-value > 0.05 $ indicates that the data are normally distributed (Belsley et al., 2005).
+\subsubsection{Leverage and Influencial Plots}
+Leverage is a measure of the effect to of a particular observation on the regression predictions. An observation is influential if its removal significantly changes the regression estimates (Chatterjee \& Hadi, 2015). Cook’s Distance measures the influence of each data point on the fitted values.
+\subsubsection{Variance Inflation Factor}
+The Variance Inflation Factor is used to check for multicollinearity. High VIF values indicate a high correlation between the predictor variables, which can lead to unreliable estimates of regression coefficients (Fox, 2015). A VIF value greater than 10 indicates the presence of multicollinearity.
+\subsubsection{Remedial Measures for Assumption Violations}
+When assumptions in linear regression are violated, it's crucial to take action. Non-normality, heteroscedasticity, and multicollinearity can mess up your model's accuracy and reliability. For non-normal residuals, the data is transformed. Common transformations to address non-normality include logarithmic (log), square root, and Box-Cox transformations
+Logarithmic transformations are suitable when the residuals exhibit right-skewness.
+Square root transformations are appropriate for moderately right-skewed residuals.
+Box-Cox transformations provide a more flexible approach by estimating an optimal power transformation parameter ($\lambda$) (R. M. A. V., 2018).
+\subsubsection{Generalized Additive Model}
+A generalized additive model is a generalized linear model with a linear predictor involving a sum of smooth functions of covariates (Wood, 2017). Generalized Additive Models are an extension of the generalized linear model that allows for non-linear relationships between the dependent and independent variables (Hastie \& Tibshirani, 1986).GAM models the response variable as a sum of smooth functions of the predictors (Grego, 2006). The model is in the form: 
+\[
+g(\mathbb{E}[Y \mid X_1, X_2, \ldots, X_p]) = \beta_0 + f_1(X_1) + f_2(X_2) + \cdots + f_p(X_p)
+\]
+\subsubsection{K-Fold Cross Validation}
+One effective method for evaluating model performance and mitigating overfitting is K-Fold Cross Validation. Rather than relying on a single train-test split, K-Fold Cross Validation partitions the data into multiple subsets to ensure a more robust estimate of the model's predictive performance. The procedure is as follows:
+
+\begin{itemize}
+    \item The dataset is randomly divided into \( K \) equal-sized folds.
+    \item The model is trained on \( K - 1 \) folds and validated on the remaining fold.
+    \item This process is repeated \( K \) times, with each fold used once as the validation set.
+    \item The final performance metric is obtained by averaging the results across all \( K \) iterations.
+\end{itemize}
+
+For this analysis, we selected \( K = 2 \), which offers a reasonable trade-off between computational efficiency and variance reduction(James et al., 2013).
+\subsubsection{Model Evaluation}
+The performance of the model was assessed using two key metrics: the root mean square error (RMSE) and the statistic \( R^2 \) (R-squared). The RMSE measures the average magnitude of the residuals, providing insight into the model's prediction accuracy. In contrast, \( R^2 \) quantifies the proportion of variance in the dependent variable that is explained by the model. These metrics jointly provide a comprehensive understanding of both predictive accuracy and model fit.
+\subsubsection{Root Mean Squared Error (RMSE)}
+The Root Mean Squared Error (RMSE) quantifies the average difference between the predicted and observed values. It is defined as:
+
+\[
+\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}
+\]
+
+A lower RMSE indicates better predictive accuracy of the model.\\
+
+\subsubsection*{Coefficient of Determination (\( R^2 \))}
+The coefficient of determination, denoted \( R^2 \), measures the proportion of variance in the observed data that is explained by the model. It is given by:
+
+\[
+R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}
+\]
+
+
+An \( R^2 \) value close to 1 indicates that the model explains a large proportion of the variance in the dependent variable, while a value closer to 0 suggests limited explanatory power.
+\subsection{Results}
+\subsubsection{Exploratory Analysis}
+From Table \ref{Table 1}, the analysis of $n=522$ residential properties revealed a mean sales price of $\mu = \$277,894.1$ (SD = $\sigma = \$137,923.4$) and a median of $\$229,900$. The average finished square footage was $\mu_{sqft} = 2260.6$ sq. ft. ($\sigma_{sqft} = 711.1$). The modal number of bedrooms was 3 (38.7\%) and bathrooms was 3 (33.5\%). Most properties featured 2-car garages (67.6\%) and air conditioning (83.1\%), with a mean lot size of $\mu_{lot} = 24369.7$ sq. ft. ($\sigma_{lot} = 11684.1$). The majority of properties were constructed between 1946 and 1985 (73.8\%) and were of medium quality (55.6\%).
+From Figure \ref{Figure 1}, Sale prices exhibit a right-skewed distribution, concentrated between $\$150,000$ and $\$300,000$ with high-end outliers. Year built shows a bimodal, right-truncated distribution peaking in the 1950s and late 1970s. Lot size and finished square footage are also right-skewed, with most properties ranging from $15,000$ to $30,000$ sq ft and $1,500$ to $2,500$ sq ft, respectively, and notable upper outliers. Boxplot analysis indicates that air conditioning is associated with a higher median sales price ($\sim\$250,000$) compared to its absence ($\sim\$175,000$). Median sale price shows a positive trend with increasing garage capacity: 2-car ($\sim\$250,000$), 3-car ($\sim\$400,000$), and $>3$-car ($\sim>\$500,000$). Homes with pools have a higher median price ($\sim\$350,000$) than those without ($\sim\$275,000$). Notably, quality level strongly influences price, with high-quality homes ($\sim\$500,000$) exceeding medium ($\sim\$275,000$) and low ($\sim\$200,000$) quality properties. Median sales prices are higher for homes not adjacent to highways ($\sim\$250,000$) compared to adjacent homes ($\sim\$230,000$). Architectural style influences median price: 7–11 elements ($\sim\$350,000$) command higher values than styles 1–3 and 4–6 ($\sim\$240,000$ and $\sim\$260,000$, respectively). Median price increases with bedroom count: 5–7 bedrooms ($\sim\$400,000$--$\$450,000$) versus 1–3 bedrooms ($\sim\$200,000$--$\$275,000$). Similarly, higher bathroom counts correlate with increased median prices: $\ge$5 bathrooms ($\sim>\$500,000$) compared to 1–2 bathrooms ($\sim\$175,000$--$\$300,000$). From Figure \ref{Figure 2}, Strong positive correlations exist between sales price ($P$) and finished square footage ($ft^2$) ($\rho \approx 0.82$), moderately with bathrooms ($B$) ($\rho \approx 0.68$) and garage size ($G$) ($\rho \approx 0.58$). Lot size ($L$) shows weak correlations ($\rho < 0.3$) with all variables. High intercorrelation between $ft^2$ and $B$ ($\rho \approx 0.76$) signals potential multicollinearity.
+
+\subsubsection{Regression Model Fit}
+
+Tbale \ref{Table 2} presents the linear regression model, several predictors significantly influence sales price ($p < 0.05$). \textit{Finished square footage} positively predicts price ($\beta = 101.8$, $p < 0.001$), indicating that each additional square foot increases the expected sales price by approximately \$102, holding other variables constant. \textit{Medium-quality} homes ($\beta = -37{,}842$, $p < 0.001$) and \textit{low-quality} homes ($\beta = -82{,}285$, $p < 0.001$) are significantly cheaper than high-quality ones, reflecting reductions in expected price by about \$37.8K and \$82.3K, respectively. \textit{Number of bathrooms} also shows a positive effect ($\beta = 10{,}482$, $p = 0.015$), where each additional bathroom increases the expected price by around \$10.5K. Similarly, \textit{garage size} has a significant impact ($\beta = 10{,}558$, $p = 0.035$), implying an approximate \$10.6K increase per additional garage space.
+\noindent
+
+Table \ref{Table 3} \& \ref{Table 8} presents the linear model has a coefficient of determination ($R^2 = 0.8287$), indicating the proportion of variance explained by the model, and a standard error ($\sigma = 58034.88$), representing the prediction error. Model fit and complexity are captured by the log-likelihood ($\text{logLik} = -6457.24$), Akaike Information Criterion ($\text{AIC} = 12952.48$), and Bayesian Information Criterion ($\text{BIC} = 13033.38$). The log-transformed model shows improved explanatory power with $R^2 = 0.8342$ and reduced standard error ($\sigma = 0.01826$).  Model fit statistics also improve, with $\text{logLik} = 1358.07$, $\text{AIC} = -2678.13$, and $\text{BIC} = -2597.24$. 
+\subsubsection{Model Diagnosis for Regression Model }
+
+\noindent
+Table \ref{Table 4} evaluates the regression residuals' adherence to key assumptions, employing a significance level of $\alpha = 0.05$. The Shapiro-Wilk test yields a test statistic of ($W = 0.9374$, $p$-value $< 0.0001$), leading to the rejection of the null hypothesis of normality. The Breusch-Pagan test returns a test statistic of ($BP = 147.253$,  $p$ value $< 0.0001$, thus rejecting the null hypothesis of homoscedasticity and confirming the presence of heteroscedasticity.
+
+
+\noindent
+Table \ref{Table 5} presents the Variance Inflation Factor (VIF) values indicate multicollinearity among predictors. Finished square feet $(V IF = 3.87)$and number of bedrooms $(VIF = 4.54)$ exhibit  collinearity, while other variables, such as garage size $VIF = 1.03$, and number of bathrooms $(VIF = 1.78)$, show minimal multicollinearity. From Figure \ref{Figure 3}, the residual plot reveals heteroscedasticity, as residual variance increases with fitted values, and non-linearity, indicated by the curved LOESS line's deviation.  These patterns suggest that the linear model's assumptions are violated. The Q-Q plot reveals mild right skewness, with residuals deviating from the 45-degree line in both tails, indicating non-normality. However, the histogram appears bell-shaped, approximating symmetry. These plots suggest violations of normality assumptions, particularly in the distribution’s tails.
+
+From Figure \ref{Figure 4}, the Cook’s Distance plot reveals a few data points with higher influence. While most observations fall below the influence threshold. All values above the red dotted line are leverage values which influence the regression estimates; the number of influential observations from the dataset are 44. From Table \ref{Table 6}, Observations with Cook's D values above $0.05 (0.07497, 0.07454)$ and large standardised residuals $(-4.03, 4.72)$ suggest potential influential outliers affecting model stability and accuracy. 
+
+
+\subsubsection{Model Evaluation for the Log Model and the Regression Model}
+
+\noindent
+Table \ref{Table 9} compares the original scale (linear) and log-transformed models using cross-validation. The log-transformed model shows a slight improvement in $R^2$ (0.8126 vs. 0.8054) and a substantial reduction in MSE ($3.65 \times 10^{-4}$ vs. $3.76 \times 10^{9}$) and RMSE (0.0191 vs. 61330.59). The log-transformed model also exhibits lower standard deviations for both MSE and $R^2$, indicating more stable performance. The log-transformed model has lower AIC (-2678.13 vs. 12952.48) and BIC (-2597.24 vs. 13033.38), further supporting its superior fit.\\
+From \ref{Figure 5}, the optimal Box-Cox transformation parameter $ \lambda = -0.195$, we apply log transformation on the response variable. 
+
+
+\subsubsection{Model Diagnosis After Transformation}
+
+\noindent
+Table \ref{Table 10} presents the Shapiro-Wilk test for normality of the log model residuals yields a ($W = 0.9915, p =0.0041$), indicating a significant departure from normality. This suggests that the log transformation did not fully normalise the residuals. The Q-Q plot shows minor deviations at the tails but generally aligns with the theoretical line, indicating approximate normality of residuals. The residuals vs fitted plot shows some non-linearity and slight heteroscedasticity at higher fitted values, confirming that the log transformation improves model assumptions but does not fully resolve all issues. The residuals vs fitted plot shows slight non-linearity and mild heteroscedasticity but is generally centered around zero. The histogram of residuals appears approximately symmetric and bell-shaped, supporting near-normality. The predicted vs actual plot displays a strong linear pattern along the diagonal, indicating good predictive performance of the log-transformed model.
+
+\subsubsection{Rank of Predictors for the Log Model}
+
+\noindent
+Table \ref{Table 11} Predictor importance, assessed by Root Mean Square Error (RMSE), shows finished square footage as most influential $(RMSE = 0.0206)$, followed by quality $(RMSE = 0.0227)$ and bathrooms $(RMSE = 0.0249)$. Variables like lot size $(RMSE = 0.0363)$ and highway adjacency $(RMSE = 0.0373)$ have marginal impact, indicating that size and quality are key determinants of price variation.
+
+\subsubsection{Generalised Additive Model Fit}
+
+\noindent
+Table \ref{Table 12} , predictorS importance of GAM is ranked by RMSE. \textit{Finished square footage} has the lowest RMSE ($0.0194$), indicating highest importance. \textit{Quality} (RMSE $= 0.0229$) and \textit{number of bathrooms} (RMSE $= 0.0240$) are also strong predictors. Other predictors, ranked by increasing RMSE, are: \textit{Year Built} ($0.0289$), \textit{Garage Size} ($0.0306$), \textit{Number of Bedrooms} ($0.0327$), \textit{Style} ($0.0335$), \textit{Air Conditioning} ($0.0350$), \textit{Lot Size} ($0.0353$), \textit{Pool} ($0.0369$), and \textit{Adjacent to Highway} ($0.0373$), the least important.
+
+\subsubsection{Model Evaluation of Log Model and GAM}
+
+\noindent
+Table \ref{Table 13} presents a comparison of the log-transformed linear model (LM) and the Generalized Additive Model (GAM) using Root Mean Square Error (RMSE) shows that GAM generally outperforms LM. The greatest RMSE reduction in GAM is observed for \textit{finished square footage} (LM RMSE $= 0.02409$, GAM RMSE $= 0.0194$, $\Delta$RMSE $= -0.0010$), followed by \textit{lot size} ($\Delta$RMSE $= -0.0010$) and \textit{number of bathrooms} ($\Delta$RMSE $= -0.0014$). Conversely, LM has slightly lower RMSE for \textit{garage size}, \textit{pool}, \textit{air conditioning} and \textit{quality}, but the differences are minimal.
+
+\subsection{Discussion}
+This study's comparative analysis of linear regression and generalized additive models (GAMs) for real estate price prediction yields critical insights into modern valuation methodologies. 
+
+The linear regression model's strong explanatory power $(R² = 0.8287)$ confirms its utility as a baseline valuation tool, particularly for establishing clear parametric relationships between key property characteristics and sales prices. The significant coefficients for square footage and construction quality align with established hedonic pricing theory (Rosen, 1974), validating conventional wisdom about value determinants. However, the diagnostic results reveal substantial violations of linear modeling assumptions, particularly regarding residual distribution and variance stability. These findings corroborate growing concerns in the literature about applying rigid linear frameworks to inherently non-linear real estate markets (Selim, 2009; Brunauer et al., 2010).
+
+The log transformation's partial success in improving model fit while failing to fully normalize residuals presents an important methodological insight. This outcome suggests that while variable transformations can mitigate some linear model limitations, they may be insufficient for addressing the structural complexities present in real estate data. The persistence of multicollinearity among key predictors further underscores the challenges of applying traditional regression techniques to highly correlated property features.
+
+The GAM's superior performance, particularly for spatial and quality-related variables, provides compelling evidence for adopting more flexible modeling approaches in valuation practice. The model's ability to capture non-linear relationships through smooth functions (Wood, 2017) proved especially valuable for characteristics like lot size and construction year, where price effects are known to be non-monotonic (Yang, 2025). The cross-validation results demonstrate that GAMs can achieve meaningful improvements in predictive accuracy without sacrificing statistical rigor.
+
+
+\subsection{Conclusion}
+This comparative study between linear regression and generalized additive models (GAMs) in real estate price prediction yields significant insights for both researchers and practitioners. While linear regression maintains value through its interpretability and established methodology, its inability to fully capture non-linear relationships and heteroscedastic residuals limits its predictive accuracy in complex housing markets. The GAM framework demonstrates superior performance, particularly in modeling key non-linear predictors like square footage and construction year, while maintaining statistical rigor. However, this enhanced predictive capability comes at the cost of reduced model transparency.
+
+The findings suggest that optimal real estate valuation may require a tiered modeling approach: employing linear models for initial exploratory analysis and regulatory applications where interpretability is paramount, while reserving GAMs for high-stakes predictive tasks.
+\subsection{Recommendation}
+\textbf{For Policy Makers}
+\begin{enumerate}
+    \item Adopt Generalized Additive Models (GAMs) for predictive modeling of real estate sales.
+    \item Maintain linear models for explanatory analysis due to their interpretability.
+    \item Promote training and capacity building by incorporating GAM methodologies into valuation certification programs.
+\end{enumerate}
+
+\textbf{Future Research}
+\begin{enumerate}
+    \item Develop more interpretable non-linear modeling techniques.
+    \item Investigate ensemble methods that combine multiple modeling approaches.
+    \item Explore spatial-temporal extensions to better capture market dynamics.
+    \item Establish standardized benchmarking frameworks for model comparison.
+\end{enumerate}
+
+\subsection{References}
+
+ChatGPT was used to correct my codes and some my wordings\\
+Belsley, D. A., Kuh, E., \& Welsch, R. E. (2005). \textit{Regression diagnostics: Identifying influential data and sources of collinearity}. John Wiley \& Sons.\\
+
+Brunauer, W., Mozer, K., \& Seitz, A. (2010). Estimating real estate prices with non-parametric models. \textit{Journal of Real Estate Finance and Economics}, 40(1), 1-16.\\
+
+Chatterjee, S., \& Hadi, A. S. (2015). \textit{Regression analysis by example}. John Wiley \& Sons.\\
+
+El Jaouhari, S., Basheer, M., \& Smith, R. (2024). Adoption of statistical learning methods in property valuation. \textit{International Journal of Property Research}, 29(3), 72-85.\\
+
+Fox, J. (2015). \textit{Applied regression analysis and generalized linear models}. Sage Publications.\\
+
+Grego, J. M. (2006). Generalized additive models. In \textit{Encyclopedia of Environmetrics}.\\
+
+Hastie, T., \& Tibshirani, R. (1986). Generalized additive models. \textit{Statistical Science}, 1(3), 297-310.\\
+
+James, G., Witten, D., Hastie, T., Tibshirani, R., et al. (2013). \textit{An introduction to statistical learning} (Vol. 112). Springer.\\
+
+Khandani, A. E., Kim, A. J., \& Lo, A. W. (2010). Consumer credit risk models via machine learning. \textit{Journal of Financial Economics}, 110(2), 293-312.\\
+
+Kutner, M. H., Nachtsheim, C. J., Neter, J., \& Li, W. (2005). \textit{Applied linear statistical models}. McGraw-Hill.\\
+
+Montgomery, D. C., Peck, E. A., \& Vining, G. G. (2021). \textit{Introduction to linear regression analysis}. John Wiley \& Sons.
+
+Pennsylvania State University. (2018). 4.2 - residuals vs. fits plot. Retrieved April 7, 2025, from https://www.psu.edu\\
+
+Remedial Measures for Assumption Violations | Linear Modeling Theory Class Notes | Fiveable. (2018). Fiveable. \\
+
+Rosen, S. (1974). Hedonic prices and implicit markets: Product differentiation in pure competition. \textit{Journal of Political Economy}, 82(1), 34-55.\\
+
+Selim, H. M. (2009). Implementation of a hedonic price model for determining the most influential factors on the real estate price. \textit{Real Estate Economics}, 37(1), 29-56.\\
+
+Wood, S. N. (2017). \textit{Generalized additive models: An introduction with R}. Chapman \& Hall/CRC.\\
+
+Yang, Z. (2025). Machine learning in real estate: A study on the predictive performance of algorithms in property valuation. \textit{Journal of Real Estate Research}, 45(2), 150-165.\\
+\subsection{Appendix A}
+\textbf{Regression Model}\\
+The general form of a regression model:
+\textbf{\[
+y = X\beta + \varepsilon
+\]
+} Where, 
+\begin{itemize}
+    \item \(y\) is the response variable Sales price, which is an \(n \times 1\).
+    \item \(X\) is an \(n \times p\) matrix corresponding to the predictor variables : Finished Square Feet, Number of Bedrooms, Number of Bathrooms, Air Conditioning, Garage Size, Pool, Year Built, Quality, Style, Lot Size and Adjacent to Highway. 
+ 
+    \item \(\beta\) is an \(n \times 1\) vector containing of the regression coefficients of the predictor variables.
+    \item \(\varepsilon\) is an \(n \times 1\) vector of the errors.
+\end{itemize}
+\textbf{Parameter Estimates}\\
+The parameters are estimated using \textbf{OLS and MLE}.
+ To find the vector \( \hat{\beta} = (b_1, b_2, \ldots, b_k)' \in \mathcal{B} \) that minimizes the sum of squared residuals.
+
+The vector of residuals \( \epsilon \) is   \[
+    \epsilon = Y - X\beta
+    \]
+ The sum of squared residuals is:
+    \[
+    S(\beta) = \sum_{i=1}^n \epsilon_i^2 = \epsilon'\epsilon = (Y - X\beta)'(Y - X\beta)
+    \]
+
+    \[
+    S(\beta) = Y'Y + \beta'X'X\beta - 2\beta'X'Y
+    \]
+
+    \[
+    \frac{\partial S(\beta)}{\partial \beta} = 2X'X\beta - 2X'Y
+    \]
+
+    \[
+    2X'X\beta - 2X'Y = 0
+    \]
+
+
+    \[
+    \hat{\beta} = (X'X)^{-1}X'Y
+    \]
+    where, \[
+    \hat{\beta} = (X'X)^{-1}X'Y
+    \] is the parameter estimates using the OLS \\
+
+To the estimates using the MLE approach for \( \beta \) and \( \sigma^2 \), we assume
+\[
+\epsilon_i \sim N(0, 1)
+\] i.e
+
+\[
+f(\epsilon_i) = \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left(-\frac{\epsilon_i^2}{2\sigma^2}\right)
+\]
+
+
+\[
+L(\beta, \sigma^2) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left(-\frac{(y_i - x_i \beta)^2}{2\sigma^2}\right)
+\]
+
+
+\[
+\ln L(\beta, \sigma^2) = \sum_{i=1}^{n} \left[ -\frac{1}{2} \ln(2\pi \sigma^2) - \frac{(y_i - x_i \beta)^2}{2\sigma^2} \right]
+\]
+
+
+\[
+\ln L(\beta, \sigma^2) = -\frac{n}{2} \ln(2\pi \sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{n} (y_i - x_i \beta)^2
+\]
+First, we take the derivative of the log-likelihood concerning \( \beta \):
+
+\[
+\frac{\partial}{\partial \beta} \ln L(\beta, \sigma^2) = -\frac{1}{2\sigma^2} \cdot \frac{\partial}{\partial \beta} \sum_{i=1}^{n} (y_i - x_i \beta)^2
+\]
+
+
+\[
+\frac{\partial}{\partial \beta} (y_i - x_i \beta)^2 = -2x_i (y_i - x_i \beta)
+\]
+
+
+\[
+\frac{\partial}{\partial \beta} \ln L(\beta, \sigma^2) = \frac{1}{\sigma^2} \sum_{i=1}^{n} x_i (y_i - x_i \beta)
+\]
+
+\[
+\sum_{i=1}^{n} x_i (y_i - x_i \beta) = 0
+\]
+
+
+\[
+X'(Y - X\beta) = 0
+\]
+
+
+\[
+\hat{\beta} = (X'X)^{-1} X'Y
+\]
+
+Next, we take the derivative of the log-likelihood for \( \sigma^2 \):
+
+\[
+\frac{\partial}{\partial \sigma^2} \ln L(\beta, \sigma^2) = -\frac{n}{2\sigma^2} + \frac{1}{2\sigma^4} \sum_{i=1}^{n} (y_i - x_i \beta)^2
+\]
+
+
+\[
+-\frac{n}{2\sigma^2} + \frac{1}{2\sigma^4} \sum_{i=1}^{n} (y_i - x_i \beta)^2 = 0
+\]
+
+
+\[
+n \sigma^2 = \sum_{i=1}^{n} (y_i - x_i \hat{\beta})^2
+\]
+
+Thus, the MLE for \( \sigma^2 \) is:
+
+\[
+\hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (y_i - x_i \hat{\beta})^2
+\]
+
+The Maximum Likelihood Estimates for \( \beta \) and \( \sigma^2 \) are:
+
+\[
+\hat{\beta} = (X'X)^{-1} X'Y
+\]
+
+\[
+\hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (y_i - x_i \hat{\beta})^2
+\]
+\textbf{Leverage and Influencial Plots}\\
+An observation can be considered as an outlier if its leverage substantially exceeds the mean leverage value $\frac{p}{n}.$
+The leverage satisfy  \(0 \leq h_{ii} \leq 1\) and \[
+\sum_{i=1}^{n} h_{ii} = \operatorname{tr}(H) = \operatorname{tr}(X(X'X)^{-1}X') = p
+\] where $p$ is the number of parameters.\\
+Cook’s Distance measures the influence of each data point on the fitted values: \[
+D_i = \frac{e_i^2}{k \cdot \hat{\sigma}^2} \cdot \frac{h_{ii}}{(1 - h_{ii})^2}
+\], \[
+\text{If } D_i > 1, \text{ then the } i\text{-th observation is considered influential.}
+\]
+
+\textbf{General Additive Model}\\
+The general form of the GAM is: 
+\[
+g(\mathbb{E}[Y \mid X_1, X_2, \ldots, X_p]) = \beta_0 + f_1(X_1) + f_2(X_2) + \cdots + f_p(X_p)
+\]
+
+where:
+\begin{itemize}
+    \item \( g(\cdot) \) is the link function that relates the expected value of the response variable \( Y \) to the additive predictor.
+    \item \( \beta_0 \) is the intercept term.
+    \item \( f_j(\cdot) \) for \( j = 1, 2, \ldots, p \) are smooth functions of the predictor variables \( X_j \)
+    \item \( X_j \) are the response variables.
+\end{itemize}
+\textbf{Parameter Estimation in GAM}
+\[
+\hat{\beta}_0, \hat{f}_1, \ldots, \hat{f}_p = \arg\max_{\beta_0, f_1, \ldots, f_p} \left\{ \ell(Y; \beta_0, f_1, \ldots, f_p) - \frac{1}{2} \sum_{j=1}^{p} \lambda_j \int \left( f_j''(x) \right)^2 dx \right\}
+\]
+Where,
+\begin{itemize}
+    \item \( \ell(Y; \beta_0, f_1, \ldots, f_p) \) is the log-likelihood of the response variable \( Y \) given the model.
+    \item \( \lambda_j \) is a smoothing parameter controlling the complexity of the smooth function \( f_j \).
+    \item \( \displaystyle \int \left( f_j''(x) \right)^2 \, dx \) is the roughness penalty for function \( f_j \), penalizing excessive wiggliness.
+\end{itemize}
+
+\textbf{Root Mean Squared Error (RMSE)}\\
+The Root Mean Squared Error (RMSE) quantifies the average difference between the predicted and observed values. It is defined as:
+
+\[
+\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}
+\]
+
+where:
+\begin{itemize}
+    \item \( y_i \) denotes the observed value for observation \( i \),
+    \item \( \hat{y}_i \) denotes the predicted value for observation \( i \),
+    \item \( n \) is the total number of observations.
+\end{itemize}
+
+Let \( e_i = y_i - \hat{y}_i \) represent the residual for observation \( i \),
+then, the Mean Squared Error (MSE) is:
+\[
+\text{MSE} = \frac{1}{n} \sum_{i=1}^n e_i^2 = \frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2
+\]
+
+\[
+\text{RMSE} = \sqrt{\text{MSE}} = \sqrt{\frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2}
+\]
+A lower RMSE implies better fit.\\
+\noindent
+
+\textbf{Coefficient of Determination (\( R^2 \))}\\
+The coefficient of determination, denoted \( R^2 \), measures the proportion of variance in the observed data that is explained by the model. It is given by:
+
+\[
+R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}
+\]
+
+where:
+\begin{itemize}
+    \item \( \bar{y} \) is the mean of the observed values \( y_1, y_2, \ldots, y_n \),
+    \item The numerator represents the residual sum of squares (unexplained variance),
+    \item The denominator represents the total sum of squares (total variance).
+\end{itemize}
+\[
+\sum_{i=1}^n (y_i - \bar{y})^2 = \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \sum_{i=1}^n (\hat{y}_i - \bar{y})^2
+\]
+\[
+\Rightarrow \text{SST} = \text{SSR} + \text{SSE}
+\]
+
+Then:
+\[
+R^2 = \frac{\text{SSE}}{\text{SST}} = 1 - \frac{\text{SSR}}{\text{SST}}
+\]
+
+\noindent
+\begin{itemize}
+    \item \( R^2 = 1 \): The model explains all the variability in the data.
+    \item \( R^2 = 0 \): The model explains none of the variability.
+    \item \( R^2 < 0 \): The model fits worse than a horizontal line at \( \bar{y} \).
+\end{itemize}
+
+\noindent
+
+\textbf{Remedial Measures for Violated Regression Assumptions}\\
+
+\textbf{Logarithmic Transformation}\\
+Let $Y \sim \text{Log-Normal}(\mu, \sigma^2)$, so that $\log(Y) \sim N(\mu, \sigma^2)$. Define the transformed variable:
+
+\[
+Z = \log(Y)
+\]
+
+
+\[
+Z = \log(Y) = \beta_0 + \beta_1 X + \varepsilon
+\]
+
+
+\[
+\text{Var}[\log(Y)] \approx \left( \frac{d \log(Y)}{dY}\bigg|_{Y=\mu} \right)^2 \cdot \text{Var}(Y) = \left( \frac{1}{\mu} \right)^2 \cdot \sigma^2 = \frac{\sigma^2}{\mu^2}
+\]
+
+Hence, the log transformation is appropriate when $\text{Var}(Y) \propto \mu^2$, especially when $Y$ is right-skewed.\\
+
+\textbf{Square Root Transformation}
+
+If the variance of $Y$ increases linearly with the mean, i.e., $\text{Var}(Y) \propto \mu$, a square root transformation may stabilize variance:
+
+\[
+Z = \sqrt{Y}
+\]
+
+\[
+\text{Var}(\sqrt{Y}) \approx \left( \frac{d \sqrt{Y}}{dY} \bigg|_{Y=\mu} \right)^2 \cdot \text{Var}(Y) = \left( \frac{1}{2\sqrt{\mu}} \right)^2 \cdot \sigma^2 = \frac{\sigma^2}{4\mu}
+\]
+
+This transformation is particularly suitable for moderately right-skewed data.\\
+
+\textbf{Box-Cox Transformation}\\
+The Box-Cox transformation generalizes these two approaches by estimating the optimal transformation:
+
+\[
+Y^{(\lambda)} =
+\begin{cases}
+\frac{Y^\lambda - 1}{\lambda}, & \lambda \neq 0 \\
+\log(Y), & \lambda = 0
+\end{cases}
+\]
+
+The transformed model becomes:
+
+\[
+Y_i^{(\lambda)} = \beta_0 + \beta_1 X_i + \varepsilon_i
+\]
+
+The maximum likelihood estimation (MLE) of $\lambda$ involves maximizing the log-likelihood:
+
+\[
+\log L(\lambda) = -\frac{n}{2} \log \left( \frac{1}{n} \sum_{i=1}^n \left( Y_i^{(\lambda)} - \hat{Y}_i^{(\lambda)} \right)^2 \right) + (\lambda - 1) \sum_{i=1}^n \log(Y_i)
+\]
+
+\begin{itemize}
+    \item When \( \lambda = 1 \), no transformation is applied: \( Y^{(\lambda)} = Y \).
+    \item When \( \lambda = 0 \), the transformation corresponds to the natural logarithm: \( Y^{(0)} = \log(Y) \).
+    \item When \( \lambda = 0.5 \), the transformation is equivalent to the square root: \( Y^{(0.5)} = \sqrt{Y} \).
+\end{itemize}
+
+\subsection{Appendix B}
+<<echo=FALSE>>=
+# Load libraries
+library(tidyverse) # for data management
+library(ggplot2) # for data visualization
+library(GGally)  # For scatterplot matrix
+library(car)     # For VIF
+library(mgcv)    # For GAM
+library(knitr)   # For knitting documents
+library(kableExtra) # for styling the tables
+library(broom)   # For tidy model output
+library(lmtest)  # For assumption tests
+library(gridExtra) # For arranging multiple plots
+library(skimr) # for descriptive statistics
+library(visreg) # for visualizing the model results
+library(patchwork) # For arranging multiple plots
+library(grid) # for arranging plots
+library(tinytex)
+library(kableExtra)
+library(dplyr)
+library(gtsummary)
+library(tidyverse)
+library(expss)
+library(mgcv)  # For GAM implementation
+library(officer)
+library(flextable)
+library(expss)
+# set-up a global plot width and height
+
+@
+
+<<echo=FALSE>>=
+library(readxl)
+library(tidyverse)
+data <- read_excel("~/Downloads/Data.xlsx")  # If your file is directly in Downloads  
+@
+
+
+<<echo=FALSE>>=
+
+data$X5 <- factor(data$X5,
+                  levels = c(0,1),
+                  labels = c("No","Yes"))
+
+data$X7 <- factor(data$X7,
+                  levels = c(0,1),
+                  labels = c("No","Yes"))
+
+data$X12 <- factor(data$X12,
+                  levels = c(0,1),
+                  labels = c("No","Yes"))
+
+
+data$X9 <- factor(data$X9,
+                  levels = c(1,2,3),
+                  labels = c("High Quality","Medium Quality","Low Quality"))
+
+data <- data |> mutate(year_category = cut(X8,   
+                        breaks = c(1885, 1905, 1925, 1945, 1965, 1985, Inf),   
+                        labels = c("1885-1905","1906-1925",
+                                   "1926-1945","1946-1965",
+                                   "1966-1985","1986-1998"),  
+                        include.lowest = TRUE,   
+                       right = FALSE)) 
+
+data <- data |> mutate(X10 = cut(X10,   
+                        breaks = c(1,4,7, Inf),   
+                        labels = c("1-3","4-6","7-11"),  
+                        include.lowest = TRUE,   
+                       right = FALSE)) 
+#Label variable
+library(expss)
+data = apply_labels(data,
+                    X1="Sales price",
+                       X2="Finished square feet",
+                       X3="Number of bedrooms",
+                       X4="Number of bathrooms",
+                       X5="Air conditioning",
+                       X6="Garage size",
+                       X7="Pool",
+                       X8="Year built",
+                       X9="Quality",
+                       X10="Style",
+                       X11="Lot size",
+                       X12="Adjacent to highway",
+                       year_category="Year Built")
+@
+
+
+
+
+\begin{table}[H]
+\centering
+\caption{Descriptive Statistics of Residential Property Features}
+\label{Table 1}
+<<echo=FALSE, results=tex>>=
+
+
+tab1 <- tbl_summary(
+  data,
+  include = c(X1,X2,X3,X4,X5,X6,X7,year_category,X9,X10,X11,X12),
+  statistic = list(
+    all_continuous() ~ "{mean} ({sd}), {median} ({p25}, {p75})",
+    all_categorical() ~ "{n} ({p}%)"
+  ),
+  digits = list(
+    all_continuous() ~ 1,
+    all_categorical() ~ 1
+  ),
+  missing = "no"
+) |>
+  modify_header(
+    label = "Variable", 
+    stat_0 = "N(%)"
+  ) |>
+  bold_labels() |>
+  as_kable(format = "latex", booktabs = TRUE)
+
+print(tab1)
+@
+\end{table}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=TRUE, fig.width=14, fig.height=10>>=
+library(ggplot2)
+library(patchwork)
+
+# --- HISTOGRAMS ---
+
+hist1 <- ggplot(data, aes(x = X1)) + 
+  geom_histogram(binwidth = 10000, fill = 'lightblue', color = 'black') + 
+  labs(title = 'Sale Price', x = 'Sale Price', y = 'Frequency') +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), 
+        axis.title = element_text(size = 7), 
+        axis.text = element_text(size = 6))
+
+hist2 <- ggplot(data, aes(x = X8)) + 
+  geom_histogram(binwidth = 5, fill = 'lightgreen', color = 'black') + 
+  labs(title = 'Year Built', x = 'Year Built', y = 'Frequency') +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), 
+        axis.title = element_text(size = 7), 
+        axis.text = element_text(size = 6))
+
+hist3 <- ggplot(data, aes(x = X11)) + 
+  geom_histogram(binwidth = 5000, fill = 'lightcoral', color = 'black') + 
+  labs(title = 'Lot Size', x = 'Lot Size', y = 'Frequency') +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), 
+        axis.title = element_text(size = 7), 
+        axis.text = element_text(size = 6))
+
+hist4 <- ggplot(data, aes(x = X2)) + 
+  geom_histogram(binwidth = 200, fill = 'lightyellow', color = 'black') + 
+  labs(title = 'Finished SqFt', x = 'Finished SqFt', y = 'Frequency') +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), 
+        axis.title = element_text(size = 7), 
+        axis.text = element_text(size = 6))
+
+# --- BOX PLOTS ---
+
+box_plot1 <- ggplot(data, aes(x = factor(X5), y = X1)) + 
+  geom_boxplot(fill = "lightblue") + 
+  labs(title = "Air Conditioning", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot2 <- ggplot(data, aes(x = factor(X6), y = X1)) + 
+  geom_boxplot(fill = "lightgreen") + 
+  labs(title = "Garage Size", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot3 <- ggplot(data, aes(x = factor(X7), y = X1)) + 
+  geom_boxplot(fill = "lightcoral") + 
+  labs(title = "Pool", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot4 <- ggplot(data, aes(x = factor(X9), y = X1)) + 
+  geom_boxplot(fill = "lightyellow") + 
+  labs(title = "Quality", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot5 <- ggplot(data, aes(x = factor(X12), y = X1)) + 
+  geom_boxplot(fill = "lightblue") + 
+  labs(title = "Highway Adjacent", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot6 <- ggplot(data, aes(x = factor(X10), y = X1)) + 
+  geom_boxplot(fill = "red") + 
+  labs(title = "Style", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot7 <- ggplot(data, aes(x = factor(X3), y = X1)) + 
+  geom_boxplot(fill = "grey") + 
+  labs(title = "Bedrooms", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+box_plot8 <- ggplot(data, aes(x = factor(X4), y = X1)) + 
+  geom_boxplot(fill = "green") + 
+  labs(title = "Bathrooms", x = "", y = "Sale Price") +
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 9), axis.title = element_text(size = 7), axis.text = element_text(size = 6))
+
+# --- COMBINE EVERYTHING ---
+final_combined_plot <- (hist1 | hist2 | hist3 | hist4) / 
+                       (box_plot1 | box_plot2 | box_plot3 | box_plot4) / 
+                       (box_plot5 | box_plot6 | box_plot7 | box_plot8)
+
+# Print the plot
+final_combined_plot
+@
+\caption{Histograms of the Numeric Variables and Box Plots of Sale Price by Categorical Variables}
+\label{Figure 1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=TRUE>>=
+library(reshape2)
+# Define the selected variables
+selected_vars <- c("X1","X2","X3","X4","X6","X11")
+
+# Subset the sales_data dataframe to include only the selected variables
+df_selected <- data[, selected_vars]
+
+names(df_selected)[names(df_selected) == "X1"] <- "Salesprice"
+names(df_selected)[names(df_selected) == "X2"] <- "Finishedsquareft"
+names(df_selected)[names(df_selected) == "X3"] <- "Numberofbedrooms"
+names(df_selected)[names(df_selected) == "X4"] <- "Numberofbathrooms"
+names(df_selected)[names(df_selected) == "X6"] <- "Garagesize"
+names(df_selected)[names(df_selected) == "X11"] <- "Lotsize"
+#Computing the correlation matrix
+cormat <- round(cor(df_selected),2)
+
+#Creating the correlation heatmap with ggplot2
+melted_cormat <- melt(cormat)
+
+# Create the heatmap with correlation values displayed
+heatmap_plot_selected <- ggplot(melted_cormat, aes(Var1, Var2, fill = value)) + 
+  geom_tile() +                                # Create tiles based on correlation values
+  geom_text(aes(label = round(value, 2)),       # Overlay the rounded correlation values on each tile
+            color = 'black') + 
+  scale_fill_gradient2(low = 'blue',             # Color for negative correlations
+                       high = 'red',             # Color for positive correlations
+                       mid = 'white',            # Mid-point (0 correlation)
+                       midpoint = 0, limit = c(-1, 1), 
+                       name = 'Pearson\nCorrelation') + 
+  theme_classic() +                             # Use a minimal theme
+  labs(title = 'Heatmap of Correlation'      # Plot title
+) + theme(
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.border = element_blank(),
+  panel.background = element_blank(),
+  axis.ticks = element_blank(),
+  legend.justification = c(1, 0),
+  legend.position = c(0.6, 1.0),
+  legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                title.position = "top", title.hjust = 0.5))
+
+# Display the heatmap
+print(heatmap_plot_selected)
+
+@
+\caption{A Correlation Matrix of the Numeric Variables}
+\label{Figure 2}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Parameter Estimates and P-values of the Linear Regression Model}
+\label{Table 2}
+<<echo=FALSE, results=tex>>=
+library(broom)
+library(knitr)
+
+# Subset and rename variables
+variable <- c("X1","X2","X3","X4","X5","X6","X7","X9","X10","X11","X12","year_category")
+lm_data <- as.data.frame(data[, variable])
+names(lm_data) <- c("Salesprice", "Finishedsquareft", "Numberofbedrooms", "Numberofbathrooms",
+                    "Airconditioning", "Garagesize", "Pool", "Quality", "Style",
+                    "Lotsize", "Adjacenttohighway", "YearBuilt")
+
+# Ensure factor variables are treated correctly
+lm_data$Style <- factor(lm_data$Style)
+
+# Fit the linear model
+model_1 <- lm(Salesprice ~ Quality + Finishedsquareft + Numberofbedrooms +
+              Adjacenttohighway + Numberofbathrooms + Airconditioning +
+              Garagesize + Pool + Style + Lotsize + YearBuilt,
+              data = lm_data)
+
+# Extract tidy summary
+model_summary <- tidy(model_1)
+
+# Output LaTeX-compatible table
+kable(model_summary, format = "latex", booktabs = TRUE, digits = 3)
+@
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Summary Statistics for the Linear Regression Model}
+\label{Table 3}
+<<echo=FALSE, results=tex>>=
+library(broom)
+library(knitr)
+
+# Get model summary as one-row data frame
+model_summary <- glance(model_1)
+
+# Transpose so all values show clearly
+model_summary_t <- data.frame(
+  Statistic = names(model_summary),
+  Value = t(model_summary)
+)
+
+# Render clean LaTeX table
+kable(model_summary_t,
+      format = "latex",
+      booktabs = TRUE,
+      col.names = c("Statistic", "Value"),
+      digits = 4)
+@
+\end{table}
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=TRUE>>=
+# Get model diagnostics in tidy format
+linearity_model <- augment(model_1)
+
+# Create residuals vs. fitted values plot
+p1 = ggplot(linearity_model, aes(x = .fitted, y = .resid)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  labs(title = "Residuals vs Fitted Values",
+       x = "Fitted Values",
+       y = "Residuals")+
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5, size = 11), 
+                          axis.title = element_text(size = 8), 
+                          axis.title.y = element_text(angle = 90, vjust = 1), 
+                          axis.text = element_text(size = 6))
+# QQ plot of residuals  
+p2 = ggplot(linearity_model, aes(sample = .resid)) +  
+  stat_qq() +  
+  stat_qq_line(color = "red") +  
+  labs(title = "Q-Q Plot of Residuals",  
+       x = "Theoretical Quantiles",  
+       y = "Sample Quantiles")+
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5, size = 11), 
+                          axis.title = element_text(size = 8), 
+                          axis.title.y = element_text(angle = 90, vjust = 1), 
+                          axis.text = element_text(size = 6))  
+  
+# Histogram of residuals  
+p3 <- ggplot(linearity_model, aes(x = .resid)) +  
+  geom_histogram(bins = 30, fill = "lightblue", color = "black", alpha = 0.7) +  
+  labs(title = "Histogram of Residuals",  
+       x = "Residuals",  
+       y = "Frequency")+
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5, size = 11), 
+                          axis.title = element_text(size = 8), 
+                          axis.title.y = element_text(angle = 90, vjust = 1), 
+                          axis.text = element_text(size = 6)) 
+
+# Combine the plots using patchwork  
+p1 + p2 + p3 
+@
+\caption{A Q-Q, Histogram and Residuals vs. Fitted values Plot}
+\label{Figure 3}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Diagnostic Tests: Breusch-Pagan and Shapiro-Wilk}
+\label{Table 4}
+<<echo=FALSE, results=tex>>=
+# Load required package
+library(knitr)
+
+# Run Breusch-Pagan Test
+bp_test <- bptest(model_1)
+
+# Run Shapiro-Wilk Test
+shapiro_test <- shapiro.test(linearity_model$.resid)
+
+# Create combined result table
+diagnostic_results <- data.frame(
+  Test = c("Breusch-Pagan", "Shapiro-Wilk"),
+  Statistic = c(round(as.numeric(bp_test$statistic), 3),
+                round(as.numeric(shapiro_test$statistic), 4)),
+  p_value = c(round(as.numeric(bp_test$p.value), 4),
+              round(as.numeric(shapiro_test$p.value), 4))
+)
+
+# Print LaTeX table
+kable(diagnostic_results,
+      format = "latex",
+      booktabs = TRUE,
+      col.names = c("Test", "Test Statistic", "P-value"))
+@
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Variance Inflation Factors (VIF) for Multicollinearity Assessment}
+\label{Table 5}
+<<echo=FALSE, results=tex>>=
+library(car)
+library(knitr)
+
+# Compute VIF
+vif_values <- vif(model_1)
+
+# Handle case when model includes factors: vif() returns matrix
+if (is.matrix(vif_values)) {
+  vif_df <- data.frame(
+    Predictor = rownames(vif_values),
+    VIF = round(vif_values[, "GVIF"], 3),
+    Df = vif_values[, "Df"],
+    Adjusted_GVIF = round(vif_values[, "GVIF^(1/(2*Df))"], 3)
+  )
+  kable(vif_df,
+        format = "latex",
+        booktabs = TRUE,
+        col.names = c("Predictor", "GVIF", "Df", "Adjusted GVIF"))
+} else {
+  vif_df <- data.frame(
+    Predictor = names(vif_values),
+    VIF = round(vif_values, 3)
+  )
+  kable(vif_df,
+        format = "latex",
+        booktabs = TRUE,
+        col.names = c("Predictor", "VIF"))
+}
+@
+\end{table}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=TRUE>>=
+# Calculate Cook's distance  
+linearity_model <- linearity_model |>  
+  mutate(cooks_d = cooks.distance(model_1))  
+  
+# Add an observation index column  
+linearity_model <- linearity_model |>  
+  mutate(obs_index = 1:nrow(linearity_model))  
+  
+# Plot Cook's distance  
+p4 = ggplot(linearity_model, aes(x = obs_index, y = cooks_d)) +  
+  geom_point() +  
+  geom_hline(yintercept = 4/nrow(lm_data), linetype = "dashed", color = "red") +  
+  labs(title = "Cook's Distance Plot",  
+       x = "Observation Index",  
+       y = "Cook's Distance") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5, size = 11), 
+                          axis.title = element_text(size = 8), 
+                          axis.title.y = element_text(angle = 90, vjust = 1), 
+                          axis.text = element_text(size = 6)) 
+# Calculate and plot leverage values  
+linearity_model <- linearity_model |>  
+  mutate(leverage = hatvalues(model_1))  
+  
+# Make sure we have an observation index  
+# If obs_index doesn't already exist from previous code  
+if(!"obs_index" %in% colnames(linearity_model)) {  
+  linearity_model <- linearity_model |>  
+    mutate(obs_index = 1:nrow(linearity_model))  
+}  
+  
+p5 = ggplot(linearity_model, aes(x = obs_index, y = leverage)) +  
+  geom_point() +  
+  geom_hline(yintercept = 2*mean(hatvalues(model_1)),   
+             linetype = "dashed", color = "red") +  
+  labs(title = "Leverage Values",  
+       x = "Observation Index",  
+       y = "Leverage") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5, size = 11), 
+                          axis.title = element_text(size = 8), 
+                          axis.title.y = element_text(angle = 90, vjust = 1), 
+                          axis.text = element_text(size = 6))
+
+# Combine the plots using patchwork  
+p4 + p5 
+@
+\caption{ A Cook's Distance and Leverage Plot}
+\label{Figure 4}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Top Influential Observations Based on Cook's Distance}
+\label{Table 6}
+<<echo=FALSE, results=tex>>=
+library(knitr)
+
+# Compute Cook's distance if not already done
+if (!"cooks_d" %in% names(linearity_model)) {
+  linearity_model <- augment(model_1)
+  linearity_model$cooks_d <- cooks.distance(model_1)
+}
+
+# Get top influential observations
+influential_obs <- linearity_model |>
+  filter(cooks_d > 4 / nrow(lm_data)) |>
+  arrange(desc(cooks_d)) |>
+  dplyr::select(Cooks_Distance = cooks_d,
+                Fitted_Values = .fitted,
+                Residuals = .resid,
+                Std_Residuals = .std.resid) |>
+  head(10)
+
+# Print as LaTeX table
+kable(influential_obs,
+      format = "latex",
+      booktabs = TRUE,
+      digits = 4,
+      col.names = c("Cook's D", "Fitted", "Residual", "Std. Residual"))
+@
+\end{table}
+
+
+<<echo=FALSE>>=
+# Identify high leverage points  
+high_leverage <- linearity_model |>  
+  filter(.hat > 2*mean(hatvalues(model_1))) |>  
+  arrange(desc(.hat))  
+  
+# Number of high leverage points  
+high_leverage_count <- nrow(high_leverage)  
+print(paste("Number of high leverage points:", high_leverage_count))  
+@
+
+\begin{figure}[H]
+\centering
+<<boxcox_plot, echo=FALSE, fig=TRUE, message=FALSE, warning=FALSE>>=
+library(MASS)
+library(ggplot2)
+
+# Fit the initial linear model using lm_data
+model_1 <- lm(Salesprice ~ Quality + Finishedsquareft + Numberofbedrooms +
+                Adjacenttohighway + Numberofbathrooms + Airconditioning +
+                Garagesize + Pool + Style + Lotsize + YearBuilt,
+              data = lm_data)
+
+# Perform Box-Cox transformation with a finely spaced Lambda range
+bc <- boxcox(model_1, lambda = seq(-2, 2, 0.001), plotit = FALSE)
+
+# Extract the optimal Lambda that maximizes the log-likelihood
+optimal_lambda <- bc$x[which.max(bc$y)]
+
+# Plot the Box-Cox log-likelihood curve
+plot(bc, main = "Box-Cox Transformation", xlab = "Lambda", ylab = "Log-Likelihood")
+
+# Annotate the optimal lambda on the plot
+text(optimal_lambda, max(bc$y),
+     labels = paste("Optimal Lambda =", round(optimal_lambda, 4)),
+     pos = 4, col = "red", cex = 1.2)
+@
+\caption{Box-Cox Log-Likelihood Plot Showing Optimal Lambda}
+\label{Figure 5}
+\end{figure}
+
+<<echo=FALSE>>=
+# Apply Box-Cox transformation to Salesprice using the optimal lambda
+lm_data$transformed_price <- 
+  (lm_data$Salesprice^optimal_lambda - 1) / optimal_lambda
+@
+
+\begin{table}[H]
+\centering
+\caption{Log-Transformed Model Coefficients}
+\label{Table 7}
+<<echo=FALSE, results=tex>>=
+suppressWarnings({
+  log_model <- lm(transformed_price ~ Quality + Finishedsquareft + Numberofbedrooms +
+                    Adjacenttohighway + Numberofbathrooms + Airconditioning +
+                    Garagesize + Pool + Style + Lotsize + YearBuilt, data = lm_data)
+
+  library(broom)
+  library(knitr)
+
+  kable(tidy(log_model, conf.int = TRUE), format = "latex", booktabs = TRUE, digits = 4)
+})
+@
+\end{table}
+
+
+
+\begin{table}[H]
+\centering
+\caption{Log Model Summary}
+\label{Table 8}
+<<echo=FALSE, results=tex>>=
+# Generate the model summary table
+log_model_summary <- glance(log_model)
+
+
+# Transpose so all values show clearly
+model_summary_t <- data.frame(
+  Statistic = names(log_model_summary),
+  Value = t(log_model_summary)
+)
+
+# Render clean LaTeX table
+kable(model_summary_t,
+      format = "latex",
+      booktabs = TRUE,
+      col.names = c("Statistic", "Value"),
+      digits = 4)
+@
+\end{table}
+
+
+<<echo=FALSE>>=
+if (!require(kfa)) install.packages("kfa"); library(kfa)
+k_value <- find_k(n = 522, p = 12, m = 4)
+print(k_value )
+@
+
+
+\begin{table}[H]
+\centering
+\caption{Model Evaluation for the Log Model and the Regression Model}
+\label{Table 9}
+<<echo=FALSE, results=tex>>=
+# 3. Define a custom K-fold cross-validation function with factor level handling
+custom_cv <- function(data, formula, response_var, k = 2) {
+  set.seed(8204)
+  n <- nrow(data)
+  fold_indices <- sample(rep(1:k, length.out = n))
+  
+  mse_values <- numeric(k)
+  r2_values <- numeric(k)
+  
+  for (i in 1:k) {
+    train_data <- data[fold_indices != i, ]
+    test_data <- data[fold_indices == i, ]
+    
+    # Fit model on training data
+    model <- lm(formula, data = train_data)
+    
+    # Match factor levels in test data to training data
+    factor_vars <- names(Filter(is.factor, train_data))
+    for (f in factor_vars) {
+      test_data[[f]] <- factor(test_data[[f]], levels = levels(train_data[[f]]))
+    }
+    
+    # Predict on test data
+    predictions <- predict(model, newdata = test_data)
+    actual <- test_data[[response_var]]
+    
+    # Compute MSE and R²
+    mse_values[i] <- mean((actual - predictions)^2)
+    r2_values[i] <- cor(actual, predictions)^2
+  }
+  
+  return(list(
+    avg_mse = mean(mse_values),
+    avg_r2 = mean(r2_values),
+    mse_sd = sd(mse_values),
+    r2_sd = sd(r2_values),
+    rmse = sqrt(mean(mse_values))  # Add RMSE
+  ))
+}
+
+
+# 4. Define the formulas for both models
+original_formula <- as.formula("Salesprice~Quality+Finishedsquareft+Numberofbedrooms+
+                               Adjacenttohighway+Numberofbathrooms+Airconditioning+
+                               Garagesize+Pool+Style+Lotsize+YearBuilt")
+
+log_formula <- as.formula("transformed_price~Quality+Finishedsquareft+Numberofbedrooms+
+                               Adjacenttohighway+Numberofbathrooms+Airconditioning+
+                               Garagesize+Pool+Style+Lotsize+YearBuilt")
+
+# 5. Run cross-validation for both models
+cv_original <- custom_cv(lm_data, original_formula, "Salesprice")
+cv_log <- custom_cv(lm_data, log_formula, "transformed_price")
+
+library(knitr)
+library(tibble)
+library(dplyr)
+
+# Create your results table
+cv_results <- tibble(
+  Metric = c("MSE", "RMSE", "R_squared", "MSE_SD", "R_squared_SD"),
+  `Original (Sales price scale)` = c(
+    cv_original$avg_mse,
+    cv_original$rmse,
+    cv_original$avg_r2,
+    cv_original$mse_sd,
+    cv_original$r2_sd
+  ),
+  `Log-transformed (LogSales price scale)` = c(
+    cv_log$avg_mse,
+    cv_log$rmse,
+    cv_log$avg_r2,
+    cv_log$mse_sd,
+    cv_log$r2_sd
+  )
+)
+
+# Print the transposed table as LaTeX
+kable(cv_results, format = "latex", booktabs = TRUE, digits = 4)
+
+@
+\end{table}
+
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig=TRUE>>=
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+library(broom)
+
+# Compute residuals, fitted, predicted, etc.
+lm_data <- lm_data %>%
+  mutate(
+    residuals = residuals(log_model),
+    fitted_values = fitted(log_model),
+    predicted = predict(log_model, newdata = lm_data)
+  )
+
+# Residuals vs Fitted
+p1 <- ggplot(lm_data, aes(x = fitted_values, y = residuals)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs Fitted", x = "Fitted Values", y = "Residuals") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 8),
+        axis.text = element_text(size = 6))
+
+# Histogram of Residuals
+p2 <- ggplot(lm_data, aes(x = residuals)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Residuals", x = "Residuals", y = "Frequency") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 8),
+        axis.text = element_text(size = 6))
+
+# Predicted vs Actual (Log Model)
+p3 <- ggplot(lm_data, aes(x = transformed_price, y = predicted)) +
+  geom_point(alpha = 0.6) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Predicted vs Actual", x = "Actual log Sales Price", y = "Predicted log Sales Price") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 8),
+        axis.text = element_text(size = 6))
+
+# Q-Q Plot
+qq_data <- augment(log_model)
+p4 <- ggplot(qq_data, aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line(color = "darkred") +
+  labs(title = "Q-Q Plot", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, size = 11),
+        axis.title = element_text(size = 8), 
+        axis.text = element_text(size = 6))
+
+# Combine all four plots
+(p1 | p2) / (p3 | p4)
+@
+\caption{Model Diagnosis Plot for the Log Model}
+\label{Figure 6}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Shapiro-Wilk Test for Normality of Log Model Residuals}
+\label{Table 10}
+<<echo=FALSE, results=tex>>=
+# Shapiro-Wilk test for normality of residuals
+log_shapiro_test <- shapiro.test(residuals(log_model))
+
+# Create tidy data frame
+log_shapiro_result <- data.frame(
+  Test = "Shapiro-Wilk (Log Model)",
+  W_Statistic = round(log_shapiro_test$statistic, 4),
+  p_value = round(log_shapiro_test$p.value, 4)
+)
+
+# Output LaTeX-formatted table
+kable(log_shapiro_result,
+      format = "latex",
+      booktabs = TRUE,
+      col.names = c("Test", "W Statistic", "p-value"), digits = 4)
+@
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\caption{Rank of the Predictors for the Log Model (RMSE)}
+\label{Table 11}
+<<echo=FALSE, results=tex>>=
+  set.seed(8204)
+# Selected variables (including factors)
+selected <- c("transformed_price", "Quality", "Finishedsquareft",
+              "Numberofbedrooms", "Adjacenttohighway", "Numberofbathrooms",
+              "Airconditioning", "Garagesize", "Style","Pool", "Lotsize", "YearBuilt")
+
+cv_data <- lm_data[, selected]
+
+# Split predictors and target
+predictors <- cv_data[, -which(names(cv_data) == "transformed_price")]
+target <- cv_data$transformed_price
+predictor_names <- colnames(predictors)
+
+# Cross-validation function for RMSE calculation
+cv_lm <- function(data, target_values, target_name, predictor, k = 2) {
+  n <- nrow(data)
+  folds <- sample(rep(1:k, length.out = n))
+  rmse_vals <- numeric(k)
+  
+  factor_cols <- names(data)[sapply(data, is.factor)]
+  
+  for (i in 1:k) {
+    train_idx <- which(folds != i)
+    test_idx <- which(folds == i)
+    
+    train <- data[train_idx, ]
+    test <- data[test_idx, ]
+    
+    # Ensure consistent factor levels
+    for (col in factor_cols) {
+      train[[col]] <- factor(train[[col]], levels = levels(data[[col]]))
+      test[[col]]  <- factor(test[[col]], levels = levels(data[[col]]))
+    }
+    
+    train[[target_name]] <- target_values[train_idx]
+    
+    formula <- as.formula(paste(target_name, "~", predictor))
+    model <- lm(formula, data = train)
+    
+    preds <- predict(model, newdata = test)
+    actuals <- target_values[test_idx]
+    rmse_vals[i] <- sqrt(mean((actuals - preds)^2))
+  }
+  
+  mean(rmse_vals)
+}
+
+# Execution (correct)
+results <- data.frame(Predictor = predictor_names, RMSE = NA_real_)
+
+for (i in seq_along(predictor_names)) {
+  pred <- predictor_names[i]
+  results$RMSE[i] <- cv_lm(
+    data = cv_data,              # Contains all predictors + target
+    target_values = target,      # Numeric vector of target values
+    target_name = "transformed_price",  # Target column name as string
+    predictor = pred,            # Current predictor name
+    k = 2
+  )
+}
+
+# Rank predictors by RMSE (lower is better)
+results <- results[order(results$RMSE), ]
+
+# Print the table in LaTeX format
+results |>
+  kable(format = "latex", booktabs = TRUE, digits = 4,
+        col.names = c("Predictor", "RMSE"))
+@
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\caption{Ranking the Predictors Using the GAM (RMSE)}
+\label{Table 12}
+<<echo=FALSE, results=tex>>=
+# Data Preparation
+library(mgcv)  # For GAM implementation
+set.seed(8204)
+# Selected variables (including factors)
+selected <- c("transformed_price", "Quality", "Finishedsquareft",
+              "Numberofbedrooms", "Adjacenttohighway", "Numberofbathrooms",
+              "Airconditioning", "Garagesize", "Pool","Style","Lotsize", "YearBuilt")
+
+# Create data frame with proper factor handling
+cv_data <- lm_data[, selected]
+
+# Split predictors and target
+predictors <- cv_data[, -which(names(cv_data) == "transformed_price")]
+target <- cv_data$transformed_price
+predictor_names <- colnames(predictors)
+
+# Cross-Validation Function for GAM
+cv_gam <- function(data, target_values, target_name, predictor, k = 2) {
+  n <- nrow(data)
+  folds <- sample(rep(1:k, length.out = n))
+  rmse_vals <- numeric(k)
+
+  factor_cols <- names(data)[sapply(data, is.factor)]
+
+  for (i in 1:k) {
+    train_idx <- which(folds != i)
+    test_idx <- which(folds == i)
+
+    train <- data[train_idx, ]
+    test <- data[test_idx, ]
+
+    # Ensure consistent factor levels across folds
+    for (col in factor_cols) {
+      if (col %in% names(train) && col %in% names(test)) {
+        common_levels <- union(levels(data[[col]]), levels(data[[col]]))
+        train[[col]] <- factor(train[[col]], levels = common_levels)
+        test[[col]]  <- factor(test[[col]], levels = common_levels)
+      } else if (col %in% names(train)) {
+        train[[col]] <- factor(train[[col]], levels = levels(data[[col]]))
+      } else if (col %in% names(test)) {
+        test[[col]]  <- factor(test[[col]], levels = levels(data[[col]]))
+      }
+    }
+
+    train[[target_name]] <- target_values[train_idx]
+
+    # Determine formula
+    if (is.factor(train[[predictor]])) {
+      formula <- as.formula(paste(target_name, "~", predictor))
+    } else {
+      unique_vals <- length(unique(train[[predictor]]))
+      if (unique_vals < 3) {
+        formula <- as.formula(paste(target_name, "~", predictor))  # Treat as linear
+      } else {
+        k_val <- min(4, unique_vals)
+        formula <- as.formula(paste(target_name, "~ s(", predictor, ", k = ", k_val, ")"))
+      }
+    }
+
+    # Fit the GAM model with error handling
+    model <- tryCatch(
+      gam(formula, data = train),
+      error = function(e) {
+        warning(paste("GAM fitting error for predictor", predictor, "in fold", i, ":", e$message))
+        NULL
+      }
+    )
+
+    # Predict and compute RMSE
+    if (is.null(model)) {
+      rmse_vals[i] <- NA  # Assign NA if model fails
+    } else {
+      preds <- tryCatch(predict(model, newdata = test), error = function(e) NA)
+      actuals <- target_values[test_idx]
+      if (!any(is.na(preds))) {
+        rmse_vals[i] <- sqrt(mean((actuals - preds)^2))
+      } else {
+        rmse_vals[i] <- NA
+      }
+    }
+  }
+
+  mean(rmse_vals, na.rm = TRUE)
+}
+
+##------------------Rank Predictors
+result <- data.frame(Predictor = predictor_names, RMSE = NA_real_)
+
+for (i in seq_along(predictor_names)) {
+  pred <- predictor_names[i]
+
+  # Skip if predictor has < 2 unique values
+  if (length(unique(lm_data[[pred]])) < 2) {
+    warning(paste("Skipping predictor:", pred, "- too few unique values"))
+    next
+  }
+
+  result$RMSE[i] <- cv_gam(
+    data = lm_data[, c("transformed_price", pred)], # Pass only the target and current predictor
+    target_values = target,
+    target_name = "transformed_price",
+    predictor = pred,
+    k = 2
+  )
+}
+
+# Sort by RMSE
+result <- result[order(result$RMSE), ]
+
+# Print the table in LaTeX format
+result |>
+  kable(format = "latex", booktabs = TRUE, digits = 4,
+        col.names = c("Predictor", "RMSE"))
+@
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Comparison of RMSE for Log and GAM Models by the Predictors}
+\label{Table 13}
+<<echo=FALSE, results=tex>>=
+## Compare Models for Each Predictor
+set.seed(8204)
+results <- data.frame(
+  Predictor = predictor_names,
+  LM_RMSE = NA_real_,
+  GAM_RMSE = NA_real_
+)
+
+for (i in seq_along(predictor_names)) {
+  pred <- predictor_names[i]
+  results$LM_RMSE[i] <- cv_lm(cv_data, target, "transformed_price", pred, k = 10)
+  results$GAM_RMSE[i] <- cv_gam(cv_data[, c("transformed_price", pred)], target, "transformed_price", pred, k = 10)
+}
+
+# Calculate RMSE differences
+results$RMSE_Diff <- results$GAM_RMSE - results$LM_RMSE
+results$Better_Model <- ifelse(results$RMSE_Diff < 0, "GAM", "LM")
+
+# Sort by RMSE difference
+results <- results[order(abs(results$RMSE_Diff), decreasing = TRUE), ]
+
+# Print the table in LaTeX format
+results |>
+  kable(format = "latex", booktabs = TRUE, digits = 4,
+        col.names = c("Predictor", "LM RMSE", "GAM RMSE", "RMSE Difference", "Better Model"))
+@
+\end{table}
+
+\end{document}
